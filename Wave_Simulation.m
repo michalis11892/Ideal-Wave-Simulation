@@ -1,36 +1,49 @@
-x1 = 0.25; % X-Coordinate of the first wave's source
-y1 = 0.25; % Y-Coordinate of the first wave's source
-x2 = 0.75; % X-Coordinate of the second wave's source
-y2 = 0.75; % Y-Coordinate of the second wave's source
-A=0.1; % Amplitude of the first wave 
-B=0.1; % Amplitude of the second wave
 xmin = input("Plane Dimension X-Minimum:");
 xmax = input("Plane Dimension X-Maximum:");
 ymin = input("Plane Dimension Y-Minimum:");
 ymax = input("Plane Dimension Y-Maximum:");
 precision = input("Precision Up-To:");
+SourceNum = input("Number Of Sources:");
+Source=zeros(6,SourceNum);
+i=0;
+while(SourceNum > i)
+    i=i+1;
+    Source(1,i)=input("Source "+i+" Position-X:");
+    Source(2,i)=input("Source "+i+" Position-Y:");
+    Source(3,i)=input("Source "+i+" Amplitude:");
+    Source(4,i)=input("Source "+i+" Period:");
+    Source(5,i)=input("Source "+i+" Wavelength:");
+    Source(6,i)=input("Source "+i+" Time Of Initiation:");
+end
 t=0;
-T1=1; % Period of the first wave
-lambda1=0.05; % Wavelength of the first wave
-T2=1; % Period of the second wave
-lambda2=0.05; % Wavelength of the first wave
 x = xmin:precision:xmax;
 y = ymin:precision:ymax;
 [X,Y] = meshgrid(x,y);
-Z = A*sin(2*pi*((t/T1)-(sqrt((X-x1).^2 +(Y-y1).^2)/lambda1)))+B*sin(2*pi*((sqrt((X-x2).^2 +(Y-y2).^2)/lambda2)));
+Z = zeros(((xmax-xmin)/precision)+1,((xmax-xmin)/precision)+1);
 figure;
 s = surf(X,Y,Z);
-s.ZData=zeros(((xmax-xmin)/precision)+1,((xmax-xmin)/precision)+1);
+Znow=zeros(((xmax-xmin)/precision)+1,((xmax-xmin)/precision)+1);
 while true
-    if(((t/T1)-(sqrt((s.XData-x1).^2 +(s.YData-y1).^2)/lambda1))>=0)
-        if(((t/T2)-(sqrt((s.XData-x2).^2 +(s.YData-y2).^2)/lambda2))>=0)
-            s.ZData=A*sin(2*pi*((t/T1)-(sqrt((s.XData-x1).^2 +(s.YData-y1).^2)/lambda1)))+B*sin(2*pi*((t/T2)-(sqrt((s.XData-x2).^2 +(s.YData-y2).^2)/lambda2)));
-        else
-            s.ZData=A*sin(2*pi*((t/T1)-(sqrt((s.XData-x1).^2 +(s.YData-y1).^2)/lambda1)));
+    n1=0;
+    while(((xmax-xmin)/precision)+1>n1)
+        n1=n1+1;
+        n2=0;
+        while(((xmax-xmin)/precision)+1>n2)
+            n2=n2+1;
+            i=0;
+            while(SourceNum > i)
+                i=i+1;
+                Dnow=(((t-Source(6,i))/Source(4,i))-(sqrt((s.XData(n1,n2)-Source(1,i))^2 +(s.YData(n1,n2)-Source(2,i))^2)/Source(5,i)));
+                if(Source(6,i)<=t)
+                    if(Dnow>=0)
+                        Znow(n1,n2)=Znow(n1,n2)+Source(3,i)*sin(2*pi*Dnow);
+                    end
+                end
+            end 
         end
-    elseif(((t/T2)-(sqrt((s.XData-x2).^2 +(s.YData-y2).^2)/lambda2))>=0)
-            s.ZData=B*sin(2*pi*((t/T2)-(sqrt((s.XData-x2).^2 +(s.YData-y2).^2)/lambda2)));    
     end
+    s.ZData=Znow;
+    Znow=zeros(((xmax-xmin)/precision)+1,((xmax-xmin)/precision)+1);
     t=t+0.05;
     pause(0.05);
 end
